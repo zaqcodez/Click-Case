@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f2ec">
+  <title>CaseLink — make case names clickable</title>
+  <style>
+    :root { color-scheme: light; --ink:#172a28; --muted:#65736f; --paper:#f5f2ec; --card:#fffefa; --line:#deded4; --green:#176b55; --mint:#e5f3ed; --gold:#dfaa55; }
+    * { box-sizing:border-box }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif }
+    .shell { width:min(1060px, calc(100% - 40px)); margin:0 auto; padding:38px 0 56px }
+    header { display:flex; align-items:center; gap:12px; margin-bottom:48px }
+    .mark { display:grid; place-items:center; width:40px; height:40px; border-radius:13px; background:var(--green); color:white; font-size:22px }
+    .brand { font-weight:750; letter-spacing:-.03em; font-size:18px }
+    .brand span { color:var(--green) }
+    .hero { max-width:720px; margin:0 auto 34px; text-align:center }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; border:1px solid #c9ded4; background:#eef7f1; color:#276e59; padding:6px 11px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase }
+    .dot { width:7px; height:7px; border-radius:50%; background:#53a883 }
+    h1 { margin:18px 0 10px; font:500 clamp(38px,6vw,62px)/1.04 Georgia,"Times New Roman",serif; letter-spacing:-.045em }
+    .hero p { color:var(--muted); margin:0; font-size:17px }
+    .layout { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:stretch }
+    .panel { background:var(--card); border:1px solid var(--line); border-radius:17px; box-shadow:0 8px 24px #283b3210; overflow:hidden; min-width:0 }
+    .panel-head { display:flex; justify-content:space-between; align-items:center; padding:17px 20px 13px; border-bottom:1px solid #ecebe3 }
+    .label { font-weight:730; font-size:14px }
+    .hint { font-size:12px; color:var(--muted) }
+    textarea { display:block; width:100%; min-height:270px; resize:vertical; border:0; outline:0; padding:18px 20px; background:transparent; color:var(--ink); font:15px/1.7 ui-sans-serif,system-ui,sans-serif }
+    textarea::placeholder { color:#9a9f97 }
+    .source-foot { display:flex; justify-content:space-between; align-items:center; padding:11px 20px; border-top:1px solid #ecebe3; color:var(--muted); font-size:12px }
+    .output { min-height:270px; padding:18px 20px; white-space:pre-wrap; overflow-wrap:anywhere; font-size:15px; line-height:1.7 }
+    .output.empty { color:#9a9f97 }
+    .output a { color:#136a52; text-decoration-thickness:1px; text-underline-offset:3px; font-weight:650 }
+    .output a:hover { color:#0b4938 }
+    .output a:focus-visible { outline:2px solid var(--gold); outline-offset:2px; border-radius:2px }
+    .controls { margin-top:18px; background:var(--card); border:1px solid var(--line); border-radius:17px; padding:19px 20px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; align-items:end; box-shadow:0 8px 24px #283b3210 }
+    .key-setup { margin:0 0 18px; background:var(--card); border:1px solid var(--line); border-radius:17px; padding:17px 20px; box-shadow:0 8px 24px #283b3210 }
+    .key-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:end; margin-top:10px }
+    .key-status { min-height:18px; margin-top:8px; color:var(--muted); font-size:12px }
+    .field label { display:block; margin-bottom:7px; font-size:13px; font-weight:700 }
+    .field small { display:block; color:var(--muted); font-weight:400; margin-top:4px }
+    input, select { width:100%; min-height:43px; padding:9px 12px; background:#fff; color:var(--ink); border:1px solid #d7d9d1; border-radius:9px; font:14px ui-sans-serif,system-ui,sans-serif }
+    input:focus,select:focus,textarea:focus-visible { outline:3px solid #cce6da; outline-offset:1px }
+    button { border:0; border-radius:9px; min-height:43px; padding:0 18px; color:white; background:var(--green); font:700 14px ui-sans-serif,system-ui,sans-serif; cursor:pointer; transition:background .15s,transform .15s }
+    button:hover { background:#105642; transform:translateY(-1px) }
+    button.secondary { background:#e8eee9; color:#285344 }
+    button.secondary:hover { background:#dbe8df }
+    .actions { display:flex; gap:8px }
+    .note { display:flex; gap:10px; align-items:flex-start; color:var(--muted); font-size:12px; margin:15px 3px 0 }
+    .note b { color:var(--ink) }
+    .status { min-height:19px; margin:9px 3px 0; color:#276e59; font-size:13px }
+    @media(max-width:740px) { .shell{width:min(100% - 28px,560px);padding-top:22px} header{margin-bottom:34px}.layout{grid-template-columns:1fr}.panel textarea,.output{min-height:190px}.controls{grid-template-columns:1fr}.actions{grid-column:1/-1}.actions button{flex:1}.key-row{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header><div class="mark" aria-hidden="true">§</div><div class="brand">Case<span>Link</span></div></header>
+    <section class="hero" aria-labelledby="title">
+      <div class="eyebrow"><span class="dot"></span> Your text, connected to case law</div>
+      <h1 id="title">Make case names<br>clickable.</h1>
+      <p>Paste your writing, name the case, and turn every mention into a link to trusted case information.</p>
+    </section>
+    <section class="key-setup" aria-label="OpenAI API key setup">
+      <div class="label">Turn on AI</div>
+      <div class="hint">Paste your API key here. OpenAI and OpenRouter keys are supported. The key is sent to this app on your computer and held only until you stop the Python server.</div>
+      <div class="key-row">
+        <div class="field"><label for="apiKey">AI provider API key</label><input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste secret key" aria-label="AI provider secret API key"></div>
+        <button type="button" id="saveKeyButton">Use key for this session</button>
+      </div>
+      <div class="key-status" id="keyStatus" role="status" aria-live="polite">The key is not saved between runs.</div>
+    </section>
+    <section class="layout" aria-label="Text and linked preview">
+      <div class="panel">
+        <div class="panel-head"><span class="label">Your text</span><span class="hint">Paste or type</span></div>
+        <textarea id="sourceText" aria-label="Text containing case names" placeholder="Paste text here…&#10;&#10;Example: In Brown v. Board of Education, the Court held that…"></textarea>
+        <div class="source-foot"><span>AI mode sends text to your AI provider</span><span id="charCount">0 characters</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="label">Linked preview</span><span class="hint" id="linkCount">0 links</span></div>
+        <div id="preview" class="output empty" aria-live="polite">Your linked text will appear here.</div>
+        <div class="source-foot"><span>Links open in a new tab</span><span>Review before sharing</span></div>
+      </div>
+    </section>
+    <form class="controls" id="linkForm">
+      <div class="field"><label for="site">Link case names on</label><select id="site"><option value="justia">Justia</option><option value="oyez">Oyez</option><option value="westlaw">Westlaw</option></select><small>Westlaw links open a case-name search; sign-in and subscription access may be required.</small></div>
+      <div class="actions"><button type="submit">Link case names</button><button class="secondary" type="button" id="aiButton">Find with AI</button><button class="secondary" type="button" id="copyButton">Copy text</button></div>
+    </form>
+    <p class="note"><span aria-hidden="true">ⓘ</span><span>Click “Link case names” to find captions written as “Party v. Party.” The name and its mentions link to search results on the selected site. Check the citation and year if there are multiple matches.</span></p>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </main>
+  <script>
+    const source = document.querySelector('#sourceText');
+    const site = document.querySelector('#site');
+    const preview = document.querySelector('#preview');
+    const linkCount = document.querySelector('#linkCount');
+    const status = document.querySelector('#status');
+    const apiKeyInput = document.querySelector('#apiKey');
+    const keyStatus = document.querySelector('#keyStatus');
+    let linkedText = '';
+    let hasLinkedText = false;
+
+    function searchUrl(name) {
+      const query = encodeURIComponent(name);
+      if (site.value === 'oyez') return `https://www.oyez.org/search/${query}`;
+      if (site.value === 'westlaw') return `https://1.next.westlaw.com/Search/Results.html?query=${query}`;
+      return `https://www.justia.com/search?query=${query}`;
+    }
+
+    fetch('/api/status').then(response => response.json()).then(data => {
+      if (data.key_configured) {
+        document.querySelector('.key-setup').hidden = true;
+      } else if (!data.key_entry_allowed) {
+        document.querySelector('.key-setup').hidden = true;
+      }
+    }).catch(() => {});
+
+    function detectCaseNames(text) {
+      const word = "[A-Z0-9][A-Za-z0-9’'&./-]*";
+      const particle = "(?:of|the|and|for|on|in|ex|rel)";
+      const side = `(?:${word})(?:\\s+(?:${word}|${particle})){0,6}`;
+      const captionPattern = new RegExp(`\\b(${side})\\s+(v\\.?|vs\\.?)\\s+(${side})`, 'g');
+      const found = [];
+      for (const match of text.matchAll(captionPattern)) {
+        let left = match[1].trim();
+        let right = match[3].trim();
+        left = left.replace(/^(?:(?:In|See|Citing|Under|Per|Compare|But|However)\s+)+/, '');
+        right = right.replace(/\s+(?:the Court|the majority|the dissent|the government|the state|the statute|the Constitution|the parties)\b.*$/i, '');
+        const caseName = `${left} ${match[2]} ${right}`.replace(/\s+/g, ' ').trim().replace(/[.,;:]+$/, '');
+        if (left && right && !found.some(name => name.toLowerCase() === caseName.toLowerCase())) found.push(caseName);
+      }
+      return found.sort((a,b) => b.length - a.length);
+    }
+
+    function showPlainText() {
+      const text = source.value;
+      preview.replaceChildren();
+      linkedText = text;
+      if (!text) {
+        preview.textContent = 'Your linked text will appear here.';
+        preview.classList.add('empty');
+      } else {
+        preview.textContent = text;
+        preview.classList.remove('empty');
+      }
+      linkCount.textContent = '0 links';
+    }
+
+    function linkText(namesOverride) {
+      const text = source.value;
+      preview.replaceChildren();
+      linkedText = text;
+      hasLinkedText = true;
+      if (!text) {
+        showPlainText();
+        status.textContent = 'Paste some text first.';
+        return;
+      }
+      const caseNames = namesOverride || detectCaseNames(text);
+      if (!caseNames.length) {
+        preview.textContent = text;
+        preview.classList.remove('empty');
+        linkCount.textContent = '0 links';
+        status.textContent = 'No case captions found. Use a name in “Party v. Party” format.';
+        return;
+      }
+      preview.classList.remove('empty');
+      const escapedNames = caseNames.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const matcher = new RegExp(escapedNames.join('|'), 'gi');
+      let cursor = 0;
+      let count = 0;
+      for (const match of text.matchAll(matcher)) {
+        preview.append(document.createTextNode(text.slice(cursor, match.index)));
+        const anchor = document.createElement('a');
+        anchor.textContent = match[0];
+        anchor.href = searchUrl(match[0]);
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+        anchor.setAttribute('aria-label', `${match[0]} — search ${site.options[site.selectedIndex].text}`);
+        preview.append(anchor);
+        cursor = match.index + match[0].length;
+        count++;
+      }
+      preview.append(document.createTextNode(text.slice(cursor)));
+      linkedText = preview.innerText;
+      linkCount.textContent = `${count} ${count === 1 ? 'link' : 'links'}`;
+      status.textContent = `Found ${caseNames.length} ${caseNames.length === 1 ? 'case name' : 'case names'} and linked ${count} ${count === 1 ? 'mention' : 'mentions'}.`;
+    }
+
+    source.addEventListener('input', () => {
+      document.querySelector('#charCount').textContent = `${source.value.length} characters`;
+      hasLinkedText = false;
+      status.textContent = '';
+      showPlainText();
+    });
+    document.querySelector('#linkForm').addEventListener('submit', event => { event.preventDefault(); linkText(); });
+    document.querySelector('#saveKeyButton').addEventListener('click', async () => {
+      const key = apiKeyInput.value.trim();
+      if (!key) { keyStatus.textContent = 'Paste your secret API key into the box above first.'; apiKeyInput.focus(); return; }
+      keyStatus.textContent = 'Saving key for this session…';
+      try {
+        const response = await fetch('/api/configure-key', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({api_key: key})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not save the key.');
+        apiKeyInput.value = '';
+        keyStatus.textContent = 'Key ready for this run. It clears when you stop the Python server.';
+      } catch (error) { keyStatus.textContent = error.message; }
+    });
+    document.querySelector('#aiButton').addEventListener('click', async () => {
+      if (!source.value.trim()) { status.textContent = 'Paste some text first.'; return; }
+      const button = document.querySelector('#aiButton');
+      button.disabled = true;
+      status.textContent = 'AI is looking for case names…';
+      try {
+        const response = await fetch('/api/extract-cases', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({text: source.value})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'AI request failed.');
+        const names = [...new Set([...(data.case_names || []), ...detectCaseNames(source.value)])];
+        linkText(names);
+        if (names.length) status.textContent = `AI and text matching found ${names.length} ${names.length === 1 ? 'case name' : 'case names'}. Check the links before sharing.`;
+      } catch (error) {
+        status.textContent = `${error.message} You can still use “Link case names” without AI.`;
+      } finally { button.disabled = false; }
+    });
+    site.addEventListener('change', () => { if (hasLinkedText) linkText(); });
+    document.querySelector('#copyButton').addEventListener('click', async () => {
+      if (!source.value) { status.textContent = 'Paste some text first.'; return; }
+      if (!hasLinkedText) linkText();
+      const html = preview.innerHTML;
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], {type:'text/html'}), 'text/plain': new Blob([linkedText], {type:'text/plain'}) })]);
+        } else {
+          await navigator.clipboard.writeText(linkedText);
+        }
+        status.textContent = 'Linked text copied. Paste into a document to keep the clickable links.';
+      } catch { status.textContent = 'Copy was blocked by the browser. Select and copy the preview instead.'; }
+    });
+  </script>
+</body>
+</html>

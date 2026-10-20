@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: caselink
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: AI_API_KEY
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
